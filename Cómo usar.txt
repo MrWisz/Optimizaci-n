@@ -1,0 +1,13 @@
+1)Instalar dependencias
+Asegúrate de tener el archivo requirements.txt en la raíz del proyecto
+
+2)Abre la terminal y ejecuta
+pip install -r requirements.txt
+
+3)Instalar Tkinter (solo si usas Linux)
+sudo apt-get install python3-tk
+
+4)Ejecutar el programa principal
+Navega hasta la carpeta del proyecto y ejecuta:
+
+python main.py

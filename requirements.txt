@@ -1,0 +1,19 @@
+# ======================================================
+# Requirements for Optimization GUI Project
+# ======================================================
+
+# --- Core Dependencies ---
+numpy>=1.26.0
+matplotlib>=3.8.0
+
+# --- GUI (Tkinter) ---
+# Tkinter viene incluido por defecto con Python en la mayoría de instalaciones.
+# Si usas Linux y no lo tienes, instálalo con:
+#   sudo apt-get install python3-tk
+
+# --- Optional Development Tools ---
+# Estas herramientas son opcionales, pero útiles para mantener un código limpio y consistente.
+# pylint>=3.0.0        # Análisis estático de código
+# black>=24.0.0        # Formateador automático de código
+# autopep8>=2.0.0      # Alternativa ligera para formateo estilo PEP8
+# isort>=5.12.0        # Ordenador automático de imports
