@@ -1,0 +1,76 @@
+# ======================================================
+# 🧠 Proyecto de Optimización Numérica — Python (Tkinter)
+# ======================================================
+
+# --- Entorno virtual ---
+venv/
+.env/
+.env.bak/
+__pycache__/
+
+# --- Archivos compilados de Python ---
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+__pycache__/
+*.spec
+
+# --- Archivos temporales y cache ---
+*.log
+*.tmp
+*.bak
+*.swp
+*.DS_Store
+Thumbs.db
+
+# --- Carpetas de build / distribución ---
+build/
+dist/
+*.egg-info/
+*.egg
+*.manifest
+*.spec
+
+# --- Configuración de PyInstaller ---
+# (Archivos generados automáticamente al crear el .exe)
+main.spec
+OptimizadorNumerico.spec
+*.toc
+
+# --- Archivos de configuración de IDEs ---
+# Visual Studio Code
+.vscode/
+# PyCharm / JetBrains
+.idea/
+# Otros IDEs
+*.iml
+
+# --- Dependencias y backups ---
+Pipfile
+Pipfile.lock
+poetry.lock
+
+# --- Configuración del sistema operativo ---
+.DS_Store
+desktop.ini
+
+# --- Archivos de pruebas o ejemplos ---
+test_*.py
+tests/
+__tests__/
+sandbox/
+notebooks/
+
+# --- Archivos de usuario ---
+*.sqlite3
+*.db
+*.csv
+*.xlsx
+*.json
+*.txt
+
+# --- Recursos generados (si los produces en runtime) ---
+output/
+results/
+temp/
