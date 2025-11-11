@@ -3,23 +3,19 @@ from tkinter import ttk
 import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
-from algorithms.armijo import gradiente_descendente_armijo
+from algorithms.wolfe import gradiente_descendente_wolfe
 
 
-def create_tab_armijo(notebook, root):
-    # =====================================================
-    # Contenedor con scroll (canvas + scrollbar)
-    # =====================================================
+def create_tab_wolfe(notebook, root):
     container = ttk.Frame(notebook)
-    notebook.add(container, text="Método de Armijo")
+    notebook.add(container, text="Método de Wolfe")
 
-    # Canvas principal
     canvas = tk.Canvas(container)
     scrollbar = ttk.Scrollbar(container, orient="vertical", command=canvas.yview)
     canvas.configure(yscrollcommand=scrollbar.set)
 
     scrollable_frame = ttk.Frame(canvas)
-    canvas_window = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+    canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
 
     def update_scrollregion(event):
         canvas.configure(scrollregion=canvas.bbox("all"))
@@ -42,9 +38,7 @@ def create_tab_armijo(notebook, root):
 
     tab = scrollable_frame
 
-    # =====================================================
-    # Sección superior: parámetros y botón
-    # =====================================================
+    # --- Encabezado ---
     header = ttk.Frame(tab)
     header.pack(fill="x", padx=10, pady=10)
 
@@ -58,16 +52,13 @@ def create_tab_armijo(notebook, root):
     entry_x0.insert(0, "2, 1")
     entry_x0.grid(row=1, column=1, pady=3, sticky="w")
 
-    ttk.Button(header, text="Ejecutar Método de Armijo").grid(row=2, column=0, columnspan=2, pady=10)
+    ttk.Button(header, text="Ejecutar Método de Wolfe").grid(row=2, column=0, columnspan=2, pady=10)
 
     result_label = ttk.Label(header, text="Resultado: —", font=("Segoe UI", 11, "bold"))
     result_label.grid(row=3, column=0, columnspan=2, pady=5)
-
     header.columnconfigure(1, weight=1)
 
-    # =====================================================
-    # Contenedor de resultados (gráfica arriba, tabla abajo)
-    # =====================================================
+    # --- Cuerpo ---
     content = ttk.Frame(tab)
     content.pack(expand=True, fill="both", padx=10, pady=10)
 
@@ -77,9 +68,7 @@ def create_tab_armijo(notebook, root):
     frame_table = ttk.Frame(content)
     frame_table.pack(fill="both", expand=True)
 
-    # =====================================================
-    # Función principal
-    # =====================================================
+    # --- Función principal ---
     def ejecutar():
         for widget in frame_plot.winfo_children():
             widget.destroy()
@@ -91,7 +80,7 @@ def create_tab_armijo(notebook, root):
             f = lambda x: eval(expr_f, {"x": x, "np": np})
             x0 = np.array([float(v) for v in entry_x0.get().split(",")])
 
-            x_opt, f_opt, hist = gradiente_descendente_armijo(f, x0)
+            x_opt, f_opt, hist = gradiente_descendente_wolfe(f, x0)
             result_label.config(text=f"📍 x* = {x_opt.round(5)},   f(x*) = {f_opt:.6f}")
 
             # --- Gráfica ---
@@ -106,7 +95,7 @@ def create_tab_armijo(notebook, root):
             ax.contour(X, Y, Z, levels=20, cmap="viridis")
             ax.plot(xs, ys, "ro--", label="Trayectoria")
             ax.scatter(x_opt[0], x_opt[1], c="red", s=60, label="x*")
-            ax.set_title("Trayectoria del Descenso (Armijo)")
+            ax.set_title("Trayectoria del Descenso (Wolfe)")
             ax.legend()
             ax.grid(True)
 

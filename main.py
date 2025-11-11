@@ -4,6 +4,7 @@ from ui.tabs_local import create_tab_local
 from ui.tabs_fibonacci import create_tab_fibonacci
 from ui.tab_armijo import create_tab_armijo
 from ui.tab_help import create_tab_help
+from ui.tab_wolfe import create_tab_wolfe
 
 # =====================================================
 # MAIN WINDOW
@@ -21,6 +22,8 @@ notebook.pack(expand=True, fill="both", padx=10, pady=10)
 create_tab_local(notebook, root)
 create_tab_fibonacci(notebook, root)
 create_tab_armijo(notebook, root)
+create_tab_wolfe(notebook, root)
 create_tab_help(notebook)
+
 
 root.mainloop()

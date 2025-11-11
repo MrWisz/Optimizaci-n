@@ -9,14 +9,54 @@ def create_tab_help(notebook):
     texto.pack(expand=True, fill="both", padx=10, pady=10)
 
     guia = """
-Guía para escribir funciones:
+Guía de Uso — Escribir funciones correctamente
 
-Variables:
-  x → variable principal
+═══════════════════════════════════════════════
+FUNCIONES UNIVARIABLES (x)
+═══════════════════════════════════════════════
+Estas se utilizan en los métodos:
+- Búsqueda Local
+- Método de Fibonacci
 
+Usa la variable `x` directamente.
+
+Ejemplos:
+  f(x) = tan(x) - tanh(x)
+  f(x) = x**2 + 3*x - 5
+  f(x) = exp(x) - 3*log(x)
+
+En la interfaz escribe:
+    tan(x) - tanh(x)
+    x**2 + 3*x - 5
+
+
+═══════════════════════════════════════════════
+FUNCIONES MULTIVARIABLES (x[0], x[1], ...)
+═══════════════════════════════════════════════
+Estas se utilizan en:
+- Método de Armijo (Gradiente Descendente)
+
+Usa notación de índice para las variables:
+  x[0] → x₁
+  x[1] → x₂
+  x[2] → x₃
+  ...
+
+Ejemplos válidos:
+  f(x) = x[0]**2 + 2*x[1]**2
+  f(x) = x[0]**2 + x[1]**2 + 3*x[0]*x[1]
+  f(x) = exp(x[0]) + sin(x[1])
+
+En la interfaz escribe:
+    x[0]**2 + 2*x[1]**2
+    exp(x[0]) + sin(x[1])
+
+
+═══════════════════════════════════════════════
+FUNCIONES DISPONIBLES
+═══════════════════════════════════════════════
 Operaciones básicas:
-  + , - , * , / , ** (exponente)
-  Ejemplo: x**2 + 3*x - 5
+  + , - , * , / , **   (exponente)
 
 Trigonometría:
   sin(x), cos(x), tan(x)
@@ -27,14 +67,24 @@ Funciones hiperbólicas:
 
 Exponenciales y logaritmos:
   exp(x), log(x)
+
 Raíces:
   sqrt(x), x**(1/3)
+
 Constantes:
   pi, e
-Ejemplos válidos:
-  - tan(x) - tanh(x)
-  - sin(x) + x**2
-  - exp(x) - 3*log(x)
+
+═══════════════════════════════════════════════
+Ejemplos prácticos
+═══════════════════════════════════════════════
+- Para Búsqueda Local o Fibonacci:
+    f(x) = tan(x) - tanh(x)
+
+- Para Armijo (2 variables):
+    f(x) = x[0]**2 + 2*x[1]**2
+
+- Para Armijo (3 variables):
+    f(x) = x[0]**2 + x[1]**2 + x[2]**2
 """
     texto.insert("1.0", guia)
     texto.config(state="disabled")
