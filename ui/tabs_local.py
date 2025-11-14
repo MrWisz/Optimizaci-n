@@ -23,6 +23,48 @@ def create_tab_local():
     layout = QVBoxLayout(tab)
 
     # =====================================================
+    # Establecer estilo oscuro para la pestaña
+    # =====================================================
+    tab.setStyleSheet("""
+        QWidget {
+            background-color: #2E2E2E;
+        }
+        QFormLayout {
+            margin: 10px;
+            background-color: #2E2E2E;
+        }
+        QLineEdit {
+            background-color: #444444;
+            color: white;
+            border: 1px solid #555555;
+        }
+        QPushButton {
+            background-color: #555555;
+            color: white;
+            border-radius: 5px;
+        }
+        QPushButton:hover {
+            background-color: #777777;
+        }
+        QLabel {
+            color: white;
+        }
+        QTableWidget {
+            background-color: #333333;
+            color: white;
+            border: 1px solid #555555;
+        }
+        QHeaderView::section {
+            background-color: #555555;
+            color: white;
+            border: none;
+        }
+        QTableWidget::item {
+            border: none;
+        }
+    """)
+
+    # =====================================================
     # SCROLL AREA
     # =====================================================
     scroll = QScrollArea()
@@ -73,7 +115,7 @@ def create_tab_local():
     # =====================================================
     table = QTableWidget()
     table.setColumnCount(7)
-    table.setHorizontalHeaderLabels([
+    table.setHorizontalHeaderLabels([  # Columna de encabezados
         "Caso", "Iteración", "x_actual", "f(x_actual)",
         "Vecino", "f(Vecino)", "Mejora"
     ])
@@ -85,7 +127,7 @@ def create_tab_local():
     # =====================================================
     def ejecutar():
 
-        # limpiar gráfica
+        # Limpiar gráfica
         plot_canvas.ax.clear()
 
         try:
@@ -95,7 +137,7 @@ def create_tab_local():
             step = float(input_step.text())
             max_iter = int(input_iter.text())
 
-            # ejecutar mínimos y máximos
+            # Ejecutar mínimos y máximos
             x_min, f_min, hist_min = busqueda_local(
                 f, (a, b), step=step, max_iter=max_iter, minimizar=True
             )
@@ -104,7 +146,7 @@ def create_tab_local():
                 f, (a, b), step=step, max_iter=max_iter, minimizar=False
             )
 
-            # resultado
+            # Resultado
             result_label.setText(
                 f"📉 Mínimo: x={x_min:.5f}, f(x)={f_min:.5f}   |   "
                 f"📈 Máximo: x={x_max:.5f}, f(x)={f_max:.5f}"

@@ -2,11 +2,33 @@ from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QTextEdit, QScrollArea
 )
 from PyQt6.QtGui import QFont
+from PyQt6.QtCore import Qt
 
 
 def create_tab_help():
     tab = QWidget()
     layout = QVBoxLayout(tab)
+
+    # =====================================================
+    # Establecer estilo oscuro para la pestaña
+    # =====================================================
+    tab.setStyleSheet("""
+        QWidget {
+            background-color: #2E2E2E;
+        }
+        QTextEdit {
+            background-color: #333333;
+            color: white;
+            border: 1px solid #555555;
+            font-size: 12pt;
+        }
+        QTextEdit:focus {
+            border-color: #888888;
+        }
+        QScrollArea {
+            border: none;
+        }
+    """)
 
     # =====================================================
     # Área de scroll

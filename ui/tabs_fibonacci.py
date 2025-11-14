@@ -31,7 +31,45 @@ def create_tab_fibonacci():
     layout_principal = QVBoxLayout(tab)
 
     # =====================================================
-    # Scroll
+    # Establecer estilo oscuro para la pestaña
+    # =====================================================
+    tab.setStyleSheet("""
+        QWidget {
+            background-color: #2E2E2E;
+        }
+        QLineEdit {
+            background-color: #444444;
+            color: white;
+            border: 1px solid #555555;
+        }
+        QPushButton {
+            background-color: #555555;
+            color: white;
+            border-radius: 5px;
+        }
+        QPushButton:hover {
+            background-color: #777777;
+        }
+        QLabel {
+            color: white;
+        }
+        QTableWidget {
+            background-color: #333333;
+            color: white;
+            border: 1px solid #555555;
+        }
+        QHeaderView::section {
+            background-color: #555555;
+            color: white;
+            border: none;
+        }
+        QTableWidget::item {
+            border: none;
+        }
+    """)
+
+    # =====================================================
+    # SCROLL
     # =====================================================
     scroll = QScrollArea()
     scroll.setWidgetResizable(True)
