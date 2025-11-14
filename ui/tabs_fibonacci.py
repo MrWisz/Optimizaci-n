@@ -1,150 +1,149 @@
-import tkinter as tk
-from tkinter import ttk
+from PyQt6.QtWidgets import (
+    QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout,
+    QHBoxLayout, QGridLayout, QScrollArea, QTableWidget,
+    QTableWidgetItem, QSizePolicy
+)
+from PyQt6.QtCore import Qt
 import numpy as np
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from algorithms.busqueda_fibonacci import busqueda_fibonacci
 from utils.common import crear_funcion
 
 
-def create_tab_fibonacci(notebook, root):
-    # =====================================================
-    # Contenedor con scroll (canvas + scrollbar)
-    # =====================================================
-    container = ttk.Frame(notebook)
-    notebook.add(container, text="Método de Fibonacci")
+# ===============================================================
+# Widget contenedor para la gráfica de Matplotlib
+# ===============================================================
+class MatplotlibCanvas(FigureCanvasQTAgg):
+    def __init__(self, parent=None):
+        fig, self.ax = plt.subplots(figsize=(6, 4), dpi=100)
+        super().__init__(fig)
+        self.setParent(parent)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.updateGeometry()
 
-    # Canvas principal
-    canvas = tk.Canvas(container)
-    scrollbar = ttk.Scrollbar(container, orient="vertical", command=canvas.yview)
-    canvas.configure(yscrollcommand=scrollbar.set)
 
-    # Frame interno desplazable
-    scrollable_frame = ttk.Frame(canvas)
-    canvas_window = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-
-    # =====================================================
-    # Control del área de scroll dinámico
-    # =====================================================
-    def _on_mousewheel(event):
-        canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
-
-    def update_scrollregion(event):
-        """Actualiza el área de scroll y activa/desactiva la rueda del mouse según overflow."""
-        canvas.configure(scrollregion=canvas.bbox("all"))
-        bbox = canvas.bbox("all")
-        if bbox:
-            content_height = bbox[3] - bbox[1]
-            canvas_height = canvas.winfo_height()
-            if content_height > canvas_height:
-                canvas.bind("<MouseWheel>", _on_mousewheel)
-            else:
-                canvas.unbind("<MouseWheel>")
-
-    scrollable_frame.bind("<Configure>", update_scrollregion)
-
-    # Empaquetar contenedor principal
-    canvas.pack(side="left", fill="both", expand=True)
-    scrollbar.pack(side="right", fill="y")
-
-    tab = scrollable_frame
+# ===============================================================
+# TAB FIBONACCI – PyQt6
+# ===============================================================
+def create_tab_fibonacci():
+    tab = QWidget()
+    layout_principal = QVBoxLayout(tab)
 
     # =====================================================
-    # Encabezado con inputs y botón
+    # Scroll
     # =====================================================
-    header = ttk.Frame(tab)
-    header.pack(fill="x", padx=10, pady=10)
+    scroll = QScrollArea()
+    scroll.setWidgetResizable(True)
 
-    ttk.Label(header, text="Función f(x):").grid(row=0, column=0, sticky="w", pady=3)
-    entry_funcion = ttk.Entry(header, width=40)
-    entry_funcion.insert(0, "tan(x) - tanh(x)")
-    entry_funcion.grid(row=0, column=1, pady=3, sticky="w")
+    contenido = QWidget()
+    scroll.setWidget(contenido)
 
-    ttk.Label(header, text="Límite inferior (a):").grid(row=1, column=0, sticky="w", pady=3)
-    entry_a = ttk.Entry(header, width=15)
-    entry_a.insert(0, "-1.3")
-    entry_a.grid(row=1, column=1, sticky="w")
-
-    ttk.Label(header, text="Límite superior (b):").grid(row=2, column=0, sticky="w", pady=3)
-    entry_b = ttk.Entry(header, width=15)
-    entry_b.insert(0, "1.3")
-    entry_b.grid(row=2, column=1, sticky="w")
-
-    ttk.Label(header, text="Tolerancia L:").grid(row=3, column=0, sticky="w", pady=3)
-    entry_tol = ttk.Entry(header, width=15)
-    entry_tol.insert(0, "0.001")
-    entry_tol.grid(row=3, column=1, sticky="w")
-
-    ttk.Button(header, text="Ejecutar Método Fibonacci").grid(row=4, column=0, columnspan=2, pady=10)
-
-    result_label = ttk.Label(header, text="Resultado: —", font=("Segoe UI", 11, "bold"))
-    result_label.grid(row=5, column=0, columnspan=2, pady=5)
-
-    header.columnconfigure(1, weight=1)
+    contenido_layout = QVBoxLayout(contenido)
 
     # =====================================================
-    # Cuerpo: gráfica arriba, tabla abajo
+    # ENCABEZADO
     # =====================================================
-    content = ttk.Frame(tab)
-    content.pack(expand=True, fill="both", padx=10, pady=10)
+    header = QWidget()
+    grid = QGridLayout(header)
 
-    frame_plot = ttk.Frame(content)
-    frame_plot.pack(fill="both", expand=True, pady=(0, 15))
+    grid.addWidget(QLabel("Función f(x):"), 0, 0)
+    entry_funcion = QLineEdit("tan(x) - tanh(x)")
+    grid.addWidget(entry_funcion, 0, 1)
 
-    frame_table = ttk.Frame(content)
-    frame_table.pack(fill="both", expand=True)
+    grid.addWidget(QLabel("Límite inferior (a):"), 1, 0)
+    entry_a = QLineEdit("-1.3")
+    grid.addWidget(entry_a, 1, 1)
+
+    grid.addWidget(QLabel("Límite superior (b):"), 2, 0)
+    entry_b = QLineEdit("1.3")
+    grid.addWidget(entry_b, 2, 1)
+
+    grid.addWidget(QLabel("Tolerancia L:"), 3, 0)
+    entry_tol = QLineEdit("0.001")
+    grid.addWidget(entry_tol, 3, 1)
+
+    btn = QPushButton("Ejecutar Método de Fibonacci")
+    grid.addWidget(btn, 4, 0, 1, 2)
+
+    result_label = QLabel("Resultado: —")
+    grid.addWidget(result_label, 5, 0, 1, 2)
+
+    contenido_layout.addWidget(header)
 
     # =====================================================
-    # Función principal de ejecución
+    # ZONA DE RESULTADOS
+    # =====================================================
+    area_grafica = QWidget()
+    graf_layout = QVBoxLayout(area_grafica)
+
+    area_tabla = QWidget()
+    tabla_layout = QVBoxLayout(area_tabla)
+
+    contenido_layout.addWidget(area_grafica)
+    contenido_layout.addWidget(area_tabla)
+
+    # =====================================================
+    # FUNCIÓN PRINCIPAL
     # =====================================================
     def ejecutar():
-        for widget in frame_plot.winfo_children():
-            widget.destroy()
-        for widget in frame_table.winfo_children():
-            widget.destroy()
+
+        # Limpiar layouts previos
+        for i in reversed(range(graf_layout.count())):
+            graf_layout.itemAt(i).widget().deleteLater()
+
+        for i in reversed(range(tabla_layout.count())):
+            tabla_layout.itemAt(i).widget().deleteLater()
 
         try:
-            f = crear_funcion(entry_funcion.get())
-            a = float(entry_a.get())
-            b = float(entry_b.get())
-            L = float(entry_tol.get())
+            f = crear_funcion(entry_funcion.text())
+            a = float(entry_a.text())
+            b = float(entry_b.text())
+            L = float(entry_tol.text())
 
             x_opt, f_opt, hist = busqueda_fibonacci(f, a, b, L)
-            result_label.config(text=f"📍 Óptimo: x={x_opt:.5f}, f(x)={f_opt:.5f}")
+            result_label.setText(f"Óptimo: x={x_opt:.5f}, f(x)={f_opt:.5f}")
 
-            # --- Gráfica (arriba) ---
-            fig, ax = plt.subplots(figsize=(6, 4), dpi=100)
+            # =====================================
+            # GRÁFICA
+            # =====================================
+            canvas = MatplotlibCanvas()
             x_vals = np.linspace(a, b, 400)
             y_vals = [f(x) for x in x_vals]
-            ax.plot(x_vals, y_vals, label=f"f(x)={entry_funcion.get()}", color="orange")
-            ax.scatter(x_opt, f_opt, color="red", s=80, label="Óptimo")
-            ax.axhline(0, color="gray", linewidth=0.8)
-            ax.axvline(0, color="gray", linewidth=0.8)
-            ax.legend()
-            ax.grid(True)
-            ax.set_title("Método de Fibonacci")
 
-            canvas_plot = FigureCanvasTkAgg(fig, master=frame_plot)
-            canvas_plot.draw()
-            canvas_plot.get_tk_widget().pack(fill="both", expand=True)
+            canvas.ax.clear()
+            canvas.ax.plot(x_vals, y_vals, color="orange", label="f(x)")
+            canvas.ax.scatter(x_opt, f_opt, color="red", s=80, label="Óptimo")
+            canvas.ax.axhline(0, color="gray", linewidth=0.8)
+            canvas.ax.axvline(0, color="gray", linewidth=0.8)
+            canvas.ax.set_title("Método de Fibonacci")
+            canvas.ax.grid(True)
+            canvas.ax.legend()
 
-            # --- Tabla (debajo) ---
-            cols = ("Iteración", "a", "b", "λ", "f(λ)", "μ", "f(μ)", "Reducción")
-            tree = ttk.Treeview(frame_table, columns=cols, show="headings", height=14)
-            for col in cols:
-                tree.heading(col, text=col)
-                tree.column(col, width=90, anchor="center")
+            canvas.draw()
+            graf_layout.addWidget(canvas)
 
-            for fila in hist:
-                tree.insert("", "end", values=fila)
-            tree.pack(expand=True, fill="both")
+            # =====================================
+            # TABLA
+            # =====================================
+            cols = ["Iteración", "a", "b", "λ", "f(λ)", "μ", "f(μ)", "Reducción"]
+
+            table = QTableWidget()
+            table.setColumnCount(len(cols))
+            table.setHorizontalHeaderLabels(cols)
+            table.setRowCount(len(hist))
+            table.horizontalHeader().setStretchLastSection(True)
+
+            for row, fila in enumerate(hist):
+                for col, val in enumerate(fila):
+                    table.setItem(row, col, QTableWidgetItem(str(val)))
+
+            tabla_layout.addWidget(table)
 
         except Exception as e:
-            result_label.config(text=f"Error: {str(e)}")
+            result_label.setText(f"Error: {e}")
 
-    # Asignar el comando al botón
-    for child in header.winfo_children():
-        if isinstance(child, ttk.Button):
-            child.config(command=ejecutar)
+    btn.clicked.connect(ejecutar)
 
+    layout_principal.addWidget(scroll)
     return tab

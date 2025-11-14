@@ -1,164 +1,147 @@
-import tkinter as tk
-from tkinter import ttk
-import numpy as np
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from PyQt6.QtWidgets import (
+    QWidget, QVBoxLayout, QFormLayout, QLineEdit, QPushButton,
+    QLabel, QScrollArea, QTableWidget, QTableWidgetItem, QHeaderView
+)
+from PyQt6.QtCore import Qt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 import matplotlib.pyplot as plt
+import numpy as np
+
 from algorithms.busqueda_local import busqueda_local
 from utils.common import crear_funcion
 
 
-def create_tab_local(notebook, root):
-    # =====================================================
-    # Contenedor con scroll (canvas + scrollbar)
-    # =====================================================
-    container = ttk.Frame(notebook)
-    notebook.add(container, text="Búsqueda Local")
+# Clase para insertar Matplotlib en PyQt6
+class MplCanvas(FigureCanvasQTAgg):
+    def __init__(self):
+        self.fig, self.ax = plt.subplots(figsize=(6, 4), dpi=100)
+        super().__init__(self.fig)
 
-    # Canvas principal
-    canvas = tk.Canvas(container)
-    scrollbar = ttk.Scrollbar(container, orient="vertical", command=canvas.yview)
-    canvas.configure(yscrollcommand=scrollbar.set)
 
-    # Frame interno desplazable
-    scrollable_frame = ttk.Frame(canvas)
-    canvas_window = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+def create_tab_local():
+    tab = QWidget()
+    layout = QVBoxLayout(tab)
 
     # =====================================================
-    # Control del área de scroll dinámico
+    # SCROLL AREA
     # =====================================================
-    def _on_mousewheel(event):
-        canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+    scroll = QScrollArea()
+    scroll.setWidgetResizable(True)
+    layout.addWidget(scroll)
 
-    def update_scrollregion(event):
-        """Actualiza el área de scroll y activa/desactiva la rueda del mouse según overflow."""
-        canvas.configure(scrollregion=canvas.bbox("all"))
-        bbox = canvas.bbox("all")
-        if bbox:
-            content_height = bbox[3] - bbox[1]
-            canvas_height = canvas.winfo_height()
-            if content_height > canvas_height:
-                canvas.bind("<MouseWheel>", _on_mousewheel)
-            else:
-                canvas.unbind("<MouseWheel>")
+    container = QWidget()
+    scroll.setWidget(container)
 
-    scrollable_frame.bind("<Configure>", update_scrollregion)
-
-    # Empaquetar contenedor principal
-    canvas.pack(side="left", fill="both", expand=True)
-    scrollbar.pack(side="right", fill="y")
-
-    tab = scrollable_frame
+    inner = QVBoxLayout(container)
 
     # =====================================================
-    # Encabezado con inputs y botón
+    # FORMULARIO DE PARÁMETROS
     # =====================================================
-    header = ttk.Frame(tab)
-    header.pack(fill="x", padx=10, pady=10)
+    form = QFormLayout()
 
-    ttk.Label(header, text="Función f(x):").grid(row=0, column=0, sticky="w", pady=3)
-    entry_funcion = ttk.Entry(header, width=40)
-    entry_funcion.insert(0, "tan(x) - tanh(x)")
-    entry_funcion.grid(row=0, column=1, pady=3, sticky="w")
+    input_funcion = QLineEdit("tan(x) - tanh(x)")
+    input_a = QLineEdit("-1.3")
+    input_b = QLineEdit("1.3")
+    input_step = QLineEdit("0.01")
+    input_iter = QLineEdit("1000")
 
-    ttk.Label(header, text="Límite inferior (a):").grid(row=1, column=0, sticky="w", pady=3)
-    entry_a = ttk.Entry(header, width=15)
-    entry_a.insert(0, "-1.3")
-    entry_a.grid(row=1, column=1, sticky="w")
+    form.addRow("Función f(x):", input_funcion)
+    form.addRow("Límite inferior (a):", input_a)
+    form.addRow("Límite superior (b):", input_b)
+    form.addRow("Step:", input_step)
+    form.addRow("Iteraciones máximas:", input_iter)
 
-    ttk.Label(header, text="Límite superior (b):").grid(row=2, column=0, sticky="w", pady=3)
-    entry_b = ttk.Entry(header, width=15)
-    entry_b.insert(0, "1.3")
-    entry_b.grid(row=2, column=1, sticky="w")
+    inner.addLayout(form)
 
-    ttk.Label(header, text="Step:").grid(row=3, column=0, sticky="w", pady=3)
-    entry_step = ttk.Entry(header, width=15)
-    entry_step.insert(0, "0.01")
-    entry_step.grid(row=3, column=1, sticky="w")
+    # BOTÓN
+    btn = QPushButton("Ejecutar Búsqueda Local")
+    inner.addWidget(btn)
 
-    ttk.Label(header, text="Iteraciones máximas:").grid(row=4, column=0, sticky="w", pady=3)
-    entry_iter = ttk.Entry(header, width=15)
-    entry_iter.insert(0, "1000")
-    entry_iter.grid(row=4, column=1, sticky="w")
-
-    ttk.Button(header, text="Ejecutar Búsqueda Local").grid(row=5, column=0, columnspan=2, pady=10)
-
-    result_label = ttk.Label(header, text="Resultado: —", font=("Segoe UI", 11, "bold"))
-    result_label.grid(row=6, column=0, columnspan=2, pady=5)
-
-    header.columnconfigure(1, weight=1)
+    # RESULTADO
+    result_label = QLabel("Resultado: —")
+    result_label.setStyleSheet("font-size: 14px; font-weight: bold;")
+    inner.addWidget(result_label)
 
     # =====================================================
-    # Cuerpo: gráfica arriba, tabla abajo
+    # GRÁFICA
     # =====================================================
-    content = ttk.Frame(tab)
-    content.pack(expand=True, fill="both", padx=10, pady=10)
-
-    frame_plot = ttk.Frame(content)
-    frame_plot.pack(fill="both", expand=True, pady=(0, 15))
-
-    frame_table = ttk.Frame(content)
-    frame_table.pack(fill="both", expand=True)
+    plot_canvas = MplCanvas()
+    inner.addWidget(plot_canvas)
 
     # =====================================================
-    # Función principal de ejecución
+    # TABLA
+    # =====================================================
+    table = QTableWidget()
+    table.setColumnCount(7)
+    table.setHorizontalHeaderLabels([
+        "Caso", "Iteración", "x_actual", "f(x_actual)",
+        "Vecino", "f(Vecino)", "Mejora"
+    ])
+    table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+    inner.addWidget(table)
+
+    # =====================================================
+    # FUNCIÓN PRINCIPAL
     # =====================================================
     def ejecutar():
-        for widget in frame_plot.winfo_children():
-            widget.destroy()
-        for widget in frame_table.winfo_children():
-            widget.destroy()
+
+        # limpiar gráfica
+        plot_canvas.ax.clear()
 
         try:
-            f = crear_funcion(entry_funcion.get())
-            a = float(entry_a.get())
-            b = float(entry_b.get())
-            step = float(entry_step.get())
-            max_iter = int(entry_iter.get())
+            f = crear_funcion(input_funcion.text())
+            a = float(input_a.text())
+            b = float(input_b.text())
+            step = float(input_step.text())
+            max_iter = int(input_iter.text())
 
-            x_min, f_min, hist_min = busqueda_local(f, (a, b), step=step, max_iter=max_iter, minimizar=True)
-            x_max, f_max, hist_max = busqueda_local(f, (a, b), step=step, max_iter=max_iter, minimizar=False)
-
-            result_label.config(
-                text=f"📉 Mínimo: x={x_min:.5f}, f(x)={f_min:.5f}   |   📈 Máximo: x={x_max:.5f}, f(x)={f_max:.5f}"
+            # ejecutar mínimos y máximos
+            x_min, f_min, hist_min = busqueda_local(
+                f, (a, b), step=step, max_iter=max_iter, minimizar=True
             )
 
-            # --- Gráfica (arriba) ---
-            fig, ax = plt.subplots(figsize=(6, 4), dpi=100)
+            x_max, f_max, hist_max = busqueda_local(
+                f, (a, b), step=step, max_iter=max_iter, minimizar=False
+            )
+
+            # resultado
+            result_label.setText(
+                f"📉 Mínimo: x={x_min:.5f}, f(x)={f_min:.5f}   |   "
+                f"📈 Máximo: x={x_max:.5f}, f(x)={f_max:.5f}"
+            )
+
+            # =====================================================
+            # GRÁFICA
+            # =====================================================
             x_vals = np.linspace(a, b, 400)
             y_vals = [f(x) for x in x_vals]
-            ax.plot(x_vals, y_vals, label=f"f(x)={entry_funcion.get()}", color="orange")
-            ax.scatter(x_min, f_min, color="red", s=80, label="Mínimo")
-            ax.scatter(x_max, f_max, color="green", s=80, label="Máximo")
-            ax.axhline(0, color="gray", linewidth=0.8)
-            ax.axvline(0, color="gray", linewidth=0.8)
-            ax.legend()
-            ax.grid(True)
-            ax.set_title("Búsqueda Local")
 
-            canvas_plot = FigureCanvasTkAgg(fig, master=frame_plot)
-            canvas_plot.draw()
-            canvas_plot.get_tk_widget().pack(fill="both", expand=True)
+            plot_canvas.ax.plot(x_vals, y_vals, color="orange", label="f(x)")
+            plot_canvas.ax.scatter(x_min, f_min, color="red", s=80, label="Mínimo")
+            plot_canvas.ax.scatter(x_max, f_max, color="green", s=80, label="Máximo")
+            plot_canvas.ax.grid(True)
+            plot_canvas.ax.legend()
+            plot_canvas.ax.set_title("Búsqueda Local")
+            plot_canvas.draw()
 
-            # --- Tabla (debajo) ---
-            cols = ("Caso", "Iteración", "x_actual", "f(x_actual)", "Vecino", "f(Vecino)", "Mejora")
-            tree = ttk.Treeview(frame_table, columns=cols, show="headings", height=14)
-            for col in cols:
-                tree.heading(col, text=col)
-                tree.column(col, width=95, anchor="center")
+            # =====================================================
+            # TABLA
+            # =====================================================
+            full_hist = [
+                ("Mínimo",) + fila for fila in hist_min
+            ] + [
+                ("Máximo",) + fila for fila in hist_max
+            ]
 
-            for fila in hist_min:
-                tree.insert("", "end", values=("Mínimo",) + fila)
-            for fila in hist_max:
-                tree.insert("", "end", values=("Máximo",) + fila)
+            table.setRowCount(len(full_hist))
 
-            tree.pack(expand=True, fill="both")
+            for row_index, fila in enumerate(full_hist):
+                for col_index, val in enumerate(fila):
+                    table.setItem(row_index, col_index, QTableWidgetItem(str(val)))
 
         except Exception as e:
-            result_label.config(text=f"Error: {str(e)}")
+            result_label.setText(f"Error: {str(e)}")
 
-    # Asignar comando al botón
-    for child in header.winfo_children():
-        if isinstance(child, ttk.Button):
-            child.config(command=ejecutar)
+    btn.clicked.connect(ejecutar)
 
     return tab

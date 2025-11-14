@@ -1,124 +1,162 @@
-import tkinter as tk
-from tkinter import ttk
+from PyQt6.QtWidgets import (
+    QWidget, QLabel, QLineEdit, QPushButton,
+    QVBoxLayout, QHBoxLayout, QGridLayout, QScrollArea,
+    QTableWidget, QTableWidgetItem, QSizePolicy
+)
+from PyQt6.QtCore import Qt
 import numpy as np
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from algorithms.wolfe import gradiente_descendente_wolfe
 
 
-def create_tab_wolfe(notebook, root):
-    container = ttk.Frame(notebook)
-    notebook.add(container, text="Método de Wolfe")
+# ===============================================================
+# Canvas para Matplotlib embebido en PyQt6
+# ===============================================================
+class MatplotlibCanvas(FigureCanvasQTAgg):
+    def __init__(self, parent=None):
+        fig, self.ax = plt.subplots(figsize=(6, 4), dpi=100)
+        super().__init__(fig)
+        self.setParent(parent)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.updateGeometry()
 
-    canvas = tk.Canvas(container)
-    scrollbar = ttk.Scrollbar(container, orient="vertical", command=canvas.yview)
-    canvas.configure(yscrollcommand=scrollbar.set)
 
-    scrollable_frame = ttk.Frame(canvas)
-    canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+# ===============================================================
+# TAB WOLFE – PyQt6
+# ===============================================================
+def create_tab_wolfe():
+    tab = QWidget()
+    main_layout = QVBoxLayout(tab)
 
-    def update_scrollregion(event):
-        canvas.configure(scrollregion=canvas.bbox("all"))
-        bbox = canvas.bbox("all")
-        if bbox:
-            content_height = bbox[3] - bbox[1]
-            canvas_height = canvas.winfo_height()
-            if content_height > canvas_height:
-                canvas.bind("<MouseWheel>", _on_mousewheel)
-            else:
-                canvas.unbind("<MouseWheel>")
+    # =====================================================
+    # SCROLL AREA
+    # =====================================================
+    scroll = QScrollArea()
+    scroll.setWidgetResizable(True)
 
-    scrollable_frame.bind("<Configure>", update_scrollregion)
+    contenido = QWidget()
+    scroll.setWidget(contenido)
+    contenido_layout = QVBoxLayout(contenido)
 
-    def _on_mousewheel(event):
-        canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+    # =====================================================
+    # ENCABEZADO
+    # =====================================================
+    header = QWidget()
+    grid = QGridLayout(header)
 
-    canvas.pack(side="left", fill="both", expand=True)
-    scrollbar.pack(side="right", fill="y")
+    grid.addWidget(QLabel("Función f(x, y):"), 0, 0)
+    entry_funcion = QLineEdit("x[0]**2 + 2*x[1]**2")
+    grid.addWidget(entry_funcion, 0, 1)
 
-    tab = scrollable_frame
+    grid.addWidget(QLabel("Punto inicial [x0, y0]:"), 1, 0)
+    entry_x0 = QLineEdit("2, 1")
+    grid.addWidget(entry_x0, 1, 1)
 
-    # --- Encabezado ---
-    header = ttk.Frame(tab)
-    header.pack(fill="x", padx=10, pady=10)
+    btn = QPushButton("Ejecutar Método de Wolfe")
+    grid.addWidget(btn, 2, 0, 1, 2)
 
-    ttk.Label(header, text="Función f(x, y):").grid(row=0, column=0, sticky="w", pady=3)
-    entry_funcion = ttk.Entry(header, width=40)
-    entry_funcion.insert(0, "x[0]**2 + 2*x[1]**2")
-    entry_funcion.grid(row=0, column=1, pady=3, sticky="ew")
+    result_label = QLabel("Resultado: —")
+    grid.addWidget(result_label, 3, 0, 1, 2)
 
-    ttk.Label(header, text="Punto inicial [x0, y0]:").grid(row=1, column=0, sticky="w", pady=3)
-    entry_x0 = ttk.Entry(header, width=20)
-    entry_x0.insert(0, "2, 1")
-    entry_x0.grid(row=1, column=1, pady=3, sticky="w")
+    contenido_layout.addWidget(header)
 
-    ttk.Button(header, text="Ejecutar Método de Wolfe").grid(row=2, column=0, columnspan=2, pady=10)
+    # =====================================================
+    # Contenedores de gráfica + tabla
+    # =====================================================
+    area_grafica = QWidget()
+    graf_layout = QVBoxLayout(area_grafica)
 
-    result_label = ttk.Label(header, text="Resultado: —", font=("Segoe UI", 11, "bold"))
-    result_label.grid(row=3, column=0, columnspan=2, pady=5)
-    header.columnconfigure(1, weight=1)
+    area_tabla = QWidget()
+    tabla_layout = QVBoxLayout(area_tabla)
 
-    # --- Cuerpo ---
-    content = ttk.Frame(tab)
-    content.pack(expand=True, fill="both", padx=10, pady=10)
+    contenido_layout.addWidget(area_grafica)
+    contenido_layout.addWidget(area_tabla)
 
-    frame_plot = ttk.Frame(content)
-    frame_plot.pack(fill="both", expand=True, pady=(0, 15))
-
-    frame_table = ttk.Frame(content)
-    frame_table.pack(fill="both", expand=True)
-
-    # --- Función principal ---
+    # =====================================================
+    # FUNCIÓN PRINCIPAL
+    # =====================================================
     def ejecutar():
-        for widget in frame_plot.winfo_children():
-            widget.destroy()
-        for widget in frame_table.winfo_children():
-            widget.destroy()
+
+        # Limpiar layouts previos
+        for i in reversed(range(graf_layout.count())):
+            graf_layout.itemAt(i).widget().deleteLater()
+
+        for i in reversed(range(tabla_layout.count())):
+            tabla_layout.itemAt(i).widget().deleteLater()
 
         try:
-            expr_f = entry_funcion.get()
+            # Crear función evaluable
+            expr_f = entry_funcion.text()
             f = lambda x: eval(expr_f, {"x": x, "np": np})
-            x0 = np.array([float(v) for v in entry_x0.get().split(",")])
 
+            # Punto inicial
+            x0 = np.array([float(v) for v in entry_x0.text().split(",")])
+
+            # Ejecutar Wolfe
             x_opt, f_opt, hist = gradiente_descendente_wolfe(f, x0)
-            result_label.config(text=f"📍 x* = {x_opt.round(5)},   f(x*) = {f_opt:.6f}")
+            result_label.setText(f"x* = {x_opt.round(5)},   f(x*) = {f_opt:.6f}")
 
-            # --- Gráfica ---
-            fig, ax = plt.subplots(figsize=(6, 4), dpi=100)
+            # =====================================
+            # GRÁFICA
+            # =====================================
+            canvas = MatplotlibCanvas()
+
             xs = np.array([h[1][0] for h in hist])
             ys = np.array([h[1][1] for h in hist])
+
             xg = np.linspace(min(xs) - 1, max(xs) + 1, 100)
             yg = np.linspace(min(ys) - 1, max(ys) + 1, 100)
             X, Y = np.meshgrid(xg, yg)
-            Z = np.array([[f(np.array([x, y])) for x in xg] for y in yg])
 
-            ax.contour(X, Y, Z, levels=20, cmap="viridis")
-            ax.plot(xs, ys, "ro--", label="Trayectoria")
-            ax.scatter(x_opt[0], x_opt[1], c="red", s=60, label="x*")
-            ax.set_title("Trayectoria del Descenso (Wolfe)")
-            ax.legend()
-            ax.grid(True)
+            Z = np.array([
+                [f(np.array([x, y])) for x in xg]
+                for y in yg
+            ])
 
-            canvas_plot = FigureCanvasTkAgg(fig, master=frame_plot)
-            canvas_plot.draw()
-            canvas_plot.get_tk_widget().pack(fill="both", expand=True)
+            canvas.ax.clear()
+            contour = canvas.ax.contour(X, Y, Z, levels=20, cmap="viridis")
 
-            # --- Tabla ---
-            cols = ("Iteración", "x", "f(x)", "α", "||∇f||")
-            tree = ttk.Treeview(frame_table, columns=cols, show="headings", height=14)
-            for col in cols:
-                tree.heading(col, text=col)
-                tree.column(col, width=110, anchor="center")
+            # Trayectoria
+            canvas.ax.plot(xs, ys, "ro--", label="Trayectoria")
+            canvas.ax.scatter(x_opt[0], x_opt[1], c="red", s=60, label="x*")
 
-            for (k, xk, fx, alpha, gradn) in hist:
-                tree.insert("", "end", values=(k, np.round(xk, 4), f"{fx:.6f}", f"{alpha:.4f}", f"{gradn:.6f}"))
-            tree.pack(expand=True, fill="both")
+            canvas.ax.set_title("Trayectoria del Descenso (Wolfe)")
+            canvas.ax.grid(True)
+            canvas.ax.legend()
+
+            canvas.draw()
+            graf_layout.addWidget(canvas)
+
+            # =====================================
+            # TABLA
+            # =====================================
+            cols = ["Iteración", "x", "f(x)", "α", "||∇f||", "Curvatura"]
+
+            table = QTableWidget()
+            table.setColumnCount(len(cols))
+            table.setHorizontalHeaderLabels(cols)
+            table.setRowCount(len(hist))
+            table.horizontalHeader().setStretchLastSection(True)
+
+            for row, (k, xk, fx, alpha, gradn, curvature) in enumerate(hist):
+                data = [
+                    k,
+                    np.round(xk, 4),
+                    f"{fx:.6f}",
+                    f"{alpha:.4f}",
+                    f"{gradn:.6f}",
+                    f"{curvature:.6f}"
+                ]
+                for col, val in enumerate(data):
+                    table.setItem(row, col, QTableWidgetItem(str(val)))
+
+            tabla_layout.addWidget(table)
 
         except Exception as e:
-            result_label.config(text=f"Error: {str(e)}")
+            result_label.setText(f"Error: {e}")
 
-    for child in header.winfo_children():
-        if isinstance(child, ttk.Button):
-            child.config(command=ejecutar)
+    btn.clicked.connect(ejecutar)
 
+    main_layout.addWidget(scroll)
     return tab

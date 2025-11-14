@@ -59,8 +59,12 @@ def gradiente_descendente_wolfe(f, x0, tol=1e-6, max_iter=200):
         grad_f = lambda x: gradiente_numerico(f, x)
         alpha = busqueda_linea_wolfe(f, grad_f, xk, dk)
         xk1 = xk + alpha * dk
+        grad_new = gradiente_numerico(f, xk1)
+        curvatura = np.dot(grad_new, dk)
+        historial.append(
+            (k, xk.copy(), f(xk), alpha, norm_g, curvatura)
+        )
 
-        historial.append((k, xk.copy(), f(xk), alpha, norm_g))
         xk = xk1
 
     return xk, f(xk), historial

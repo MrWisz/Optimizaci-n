@@ -1,12 +1,31 @@
-import tkinter as tk
-from tkinter import ttk
+from PyQt6.QtWidgets import (
+    QWidget, QVBoxLayout, QTextEdit, QScrollArea
+)
+from PyQt6.QtGui import QFont
 
-def create_tab_help(notebook):
-    tab = ttk.Frame(notebook)
-    notebook.add(tab, text="Guía de Uso")
 
-    texto = tk.Text(tab, wrap="word", font=("Segoe UI", 11))
-    texto.pack(expand=True, fill="both", padx=10, pady=10)
+def create_tab_help():
+    tab = QWidget()
+    layout = QVBoxLayout(tab)
+
+    # =====================================================
+    # Área de scroll
+    # =====================================================
+    scroll = QScrollArea()
+    scroll.setWidgetResizable(True)
+    layout.addWidget(scroll)
+
+    container = QWidget()
+    scroll.setWidget(container)
+
+    inner_layout = QVBoxLayout(container)
+
+    # =====================================================
+    # Cuadro de texto
+    # =====================================================
+    texto = QTextEdit()
+    texto.setFont(QFont("Segoe UI", 12))
+    texto.setReadOnly(True)
 
     guia = """
 Guía de Uso — Escribir funciones correctamente
@@ -15,8 +34,8 @@ Guía de Uso — Escribir funciones correctamente
 FUNCIONES UNIVARIABLES (x)
 ═══════════════════════════════════════════════
 Estas se utilizan en los métodos:
-- Búsqueda Local
-- Método de Fibonacci
+• Búsqueda Local
+• Método de Fibonacci
 
 Usa la variable `x` directamente.
 
@@ -31,10 +50,11 @@ En la interfaz escribe:
 
 
 ═══════════════════════════════════════════════
-FUNCIONES MULTIVARIABLES (x[0], x[1], ...)
+FUNCIONES MULTIVARIABLES (x[0], x[1], ... )
 ═══════════════════════════════════════════════
 Estas se utilizan en:
-- Método de Armijo (Gradiente Descendente)
+• Método de Armijo (Gradiente Descendente)
+• Método de Wolfe
 
 Usa notación de índice para las variables:
   x[0] → x₁
@@ -43,9 +63,9 @@ Usa notación de índice para las variables:
   ...
 
 Ejemplos válidos:
-  f(x) = x[0]**2 + 2*x[1]**2
-  f(x) = x[0]**2 + x[1]**2 + 3*x[0]*x[1]
-  f(x) = exp(x[0]) + sin(x[1])
+  x[0]**2 + 2*x[1]**2
+  x[0]**2 + x[1]**2 + 3*x[0]*x[1]
+  exp(x[0]) + sin(x[1])
 
 En la interfaz escribe:
     x[0]**2 + 2*x[1]**2
@@ -55,8 +75,8 @@ En la interfaz escribe:
 ═══════════════════════════════════════════════
 FUNCIONES DISPONIBLES
 ═══════════════════════════════════════════════
-Operaciones básicas:
-  + , - , * , / , **   (exponente)
+Operaciones:
+  + , - , * , / , **
 
 Trigonometría:
   sin(x), cos(x), tan(x)
@@ -74,18 +94,21 @@ Raíces:
 Constantes:
   pi, e
 
+
 ═══════════════════════════════════════════════
 Ejemplos prácticos
 ═══════════════════════════════════════════════
-- Para Búsqueda Local o Fibonacci:
-    f(x) = tan(x) - tanh(x)
+• Búsqueda Local / Fibonacci:
+      tan(x) - tanh(x)
 
-- Para Armijo (2 variables):
-    f(x) = x[0]**2 + 2*x[1]**2
+• Armijo (2 variables):
+      x[0]**2 + 2*x[1]**2
 
-- Para Armijo (3 variables):
-    f(x) = x[0]**2 + x[1]**2 + x[2]**2
+• Armijo/Wolfe (3 variables):
+      x[0]**2 + x[1]**2 + x[2]**2
 """
-    texto.insert("1.0", guia)
-    texto.config(state="disabled")
+
+    texto.setPlainText(guia)
+    inner_layout.addWidget(texto)
+
     return tab
